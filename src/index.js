@@ -1,6 +1,7 @@
 import {
   GraphQLServer
 } from "graphql-yoga";
+import { v4 as uuidv4 } from "uuid";
 
 const pessoas = [{
     id: "1",
@@ -78,6 +79,30 @@ const typeDefs = `
    pessoas: [Pessoa!]!
    comentarios: [Comentario!]!
  }
+
+ type Mutation{
+   inserirPessoa (pessoa: InserirPessoaInput): Pessoa!
+   inserirLivro (livro: InserirLivroInput): Livro!
+   inserirComentario (comentario: InserirComentarioInput): Comentario! 
+ }
+
+ input InserirLivroInput{
+  titulo: String!
+  edicao: Int!
+  autor: ID!
+ }
+
+ input InserirPessoaInput {
+   nome: String!
+   idade: Int
+ }
+
+ input InserirComentarioInput {
+   texto: String!
+   nota: Int!
+   livro: ID!
+   autor: ID!
+ }
 `;
 
 const resolvers = {
@@ -90,6 +115,49 @@ const resolvers = {
     },
     comentarios() {
       return comentarios;
+    }
+  },
+  Mutation: {
+    inserirPessoa (parent, args, ctx, info){
+      const pessoa = {
+        id: uuidv4(),
+        nome: args.pessoa.nome,
+        idade: args.pessoa.idade 
+      }
+      pessoas.push(pessoa);
+      return pessoa;
+    },
+    inserirLivro (parent, args, ctx, info){
+      const autorExiste = pessoas.some(
+        (pessoa) => pessoa.id === args.livro.autor
+      );
+      if (!autorExiste){
+        throw new Error ("Autor não existe")
+      }
+      const livro = {
+        id: uuidv4(),
+        titulo: args.livro.titulo,
+        edicao: args.livro.edicao,
+        autor: args.livro.autor
+      };
+      livros.push(livro);
+      return livro;  
+    }, 
+    inserirComentario (parent, args, ctx, info){
+      if (!pessoas.some((pessoa) => pessoa.id === args.comentario.autor) ||
+        !livros.some((livro) => livro.id === args.comentario.livro)){
+            throw new Error ('Autor e/ou Livro inexistente')
+      }
+      const comentario = {
+        id: uuidv4(),
+        texto: args.comentario.texto,
+        nota: args.comentario.nota,
+        livro: args.comentario.livro,
+        autor: args.comentario.autor 
+      }
+      comentarios.push(comentario);
+      return comentario;  
+          
     }
   },
   Livro: {
@@ -140,4 +208,4 @@ server.start({
   () => {
     console.log("Servidor em execução...");
   }
-);
+);  
