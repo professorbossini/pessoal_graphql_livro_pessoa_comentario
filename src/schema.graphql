@@ -27,12 +27,30 @@ type Query {
 }
 
 type Mutation {
-  inserirPessoa(pessoa: InserirPessoaInput): Pessoa!
+  inserirPessoa(pessoa: InserirPessoaInput!): Pessoa!
   removerPessoa(id: ID!): Pessoa!
-  inserirLivro(livro: InserirLivroInput): Livro!
+  atualizarPessoa (id: ID!, pessoa: AtualizarPessoaInput!): Pessoa!
+  inserirLivro(livro: InserirLivroInput!): Livro!
   removerLivro(id: ID!): Livro!
-  inserirComentario(comentario: InserirComentarioInput): Comentario!
+  atualizarLivro (id: ID!, livro: AtualizarLivroInput!): Livro!
+  inserirComentario(comentario: InserirComentarioInput!): Comentario!
   removerComentario(id: ID!): Comentario!
+  atualizarComentario(id: ID!, comentario: AtualizarComentarioInput!): Comentario!
+}
+
+type Subscription {
+  dado: Int!
+  comentario (idLivro: ID!): Comentario!
+}
+
+input InserirPessoaInput {
+  nome: String!
+  idade: Int
+}
+
+input AtualizarPessoaInput {
+  nome: String
+  idade: Int
 }
 
 input InserirLivroInput {
@@ -41,9 +59,9 @@ input InserirLivroInput {
   autor: ID!
 }
 
-input InserirPessoaInput {
-  nome: String!
-  idade: Int
+input AtualizarLivroInput {
+  titulo: String
+  edicao: Int
 }
 
 input InserirComentarioInput {
@@ -51,4 +69,9 @@ input InserirComentarioInput {
   nota: Int!
   livro: ID!
   autor: ID!
+}
+
+input AtualizarComentarioInput {
+  texto: String
+  nota: Int
 }
