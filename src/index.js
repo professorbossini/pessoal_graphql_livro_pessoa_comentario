@@ -31,9 +31,11 @@ const server = new GraphQLServer({
   }
 });
 server.start({
-    port: 4200,
+    port: 5000,
   },
   () => {
     console.log("Servidor em execução...");
   }
 );  
+
+

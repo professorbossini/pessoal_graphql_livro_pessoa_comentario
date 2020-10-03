@@ -63,6 +63,10 @@ const Mutation = {
       autor: args.livro.autor
     };
     ctx.db.livros.push(livro);
+    ctx.pubSub.publish('livro', {livro: {
+      mutation: 'insercao',
+      data: livro
+    }} );
     return livro;
   },
   removerLivro(parent, args, ctx, info) {
@@ -73,6 +77,12 @@ const Mutation = {
     ctx.db.comentarios = ctx.db.comentarios.filter(c => {
       return c.livro !== args.id
     })
+    ctx.pubSub.publish ('livro', {
+      livro: {
+        mutation: "remocao",
+        data: removido
+      }  
+    })
     return removido;
   },
   atualizarLivro (parent, {id, livro}, ctx, info){
@@ -81,6 +91,12 @@ const Mutation = {
     if (!livroExistente)
       throw new Error ("Livro não existe")
     Object.assign(livroExistente, { titulo: livro.titulo || livroExistente.titulo, edicao: livro.edicao || livroExistente.edicao});
+    ctx.pubSub.publish('livro', {
+      livro: {
+        mutation: "atualizacao",
+        data: livroExistente
+      }
+    })
     return livroExistente;
   },
   inserirComentario(parent, args, ctx, info) {
@@ -97,7 +113,10 @@ const Mutation = {
     }
     ctx.db.comentarios.push(comentario);
     ctx.pubSub.publish (`comentario ${args.comentario.livro}`,{
-      comentario: comentario
+      comentario: {
+        mutation: "insercao",
+        data: comentario
+      }
     });
     return comentario;
 
@@ -106,9 +125,18 @@ const Mutation = {
     const indice = ctx.db.comentarios.findIndex(c => c.id === args.id);
     if (indice < 0)
       throw new Error("Comentário não existe!")
-    return ctx.db.comentarios.splice(indice, 1)[0];
+    const removido = ctx.db.comentarios.splice(indice, 1)[0];
+    ctx.pubSub.publish(`comentario ${removido.livro}`, {
+      comentario: {
+        mutation: "remocao",
+        data: removido
+      }
+    });
+    return removido
+   
   },
-  atualizarComentario (parent, {id, comentario}, {db}, info){
+
+  atualizarComentario (parent, {id, comentario}, {db, pubSub}, info){
     const comentarioExistente = db.comentarios.find (l => l.id === id);
     if (!comentarioExistente)
       throw new Error ("Comentario não existe")
@@ -116,8 +144,13 @@ const Mutation = {
       texto: comentario.texto || comentarioExistente.texto,
       nota: comentario.nota || comentarioExistente.nota
     });
+    pubSub.publish(`comentario ${comentarioExistente.livro}`, {
+      comentario: {
+        mutation: "atualizacao",
+        data: comentarioExistente
+      }
+    });
     return comentarioExistente;
-
   }
 }
 export default Mutation;
